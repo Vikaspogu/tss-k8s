@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/mattbaird/jsonpatch"
@@ -24,11 +25,12 @@ updateAnnotation adds and overwrites existing fields but does not remove fields
 setAnnotation overwrites fields and removes fields that do not exist in the TSS Secret
 */
 const (
-	roleAnnotation   = "tss.thycotic.com/role"
-	setAnnotation    = "tss.thycotic.com/set-secret"
-	addNotation      = "tss.thycotic.com/add-to-secret"
-	updateAnnotation = "tss.thycotic.com/update-secret"
-	tsAnnotation     = "tss.thycotic.com/modified"
+	roleAnnotation    = "tss.thycotic.com/role"
+	setAnnotation     = "tss.thycotic.com/set-secret"
+	addNotation       = "tss.thycotic.com/add-to-secret"
+	updateAnnotation  = "tss.thycotic.com/update-secret"
+	tsAnnotation      = "tss.thycotic.com/modified"
+	replaceAnnotation = "tss.thycotic.com/replace"
 )
 
 /*
@@ -149,7 +151,12 @@ func Inject(ar *v1.AdmissionReview, roles Roles) error {
 			3) the Operations that conflict with patchMode must be removed
 		*/
 		for _, op := range diff {
-			op.Path = "/data" + op.Path
+			if replaceChar, ok := annotations[replaceAnnotation]; ok {
+				op.Path = "/data" + strings.ReplaceAll(op.Path, "/username", fmt.Sprintf("%s%sone", op.Path, replaceChar))
+				fmt.Println(op.Path)
+			} else {
+				op.Path = "/data" + op.Path
+			}
 
 			switch v := op.Value.(type) {
 			case []byte:

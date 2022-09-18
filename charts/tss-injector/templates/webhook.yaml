@@ -31,6 +31,9 @@ webhooks:
         port: {{ .Values.webhookPort }}
     admissionReviewVersions: ["v1", "v1beta1"]
     sideEffects: {{ default "None" .Values.sideEffects }}
+    objectSelector:
+        matchLabels:
+          injector: thycotic
 {{- end }}
 ---
 apiVersion: v1
